@@ -7,3 +7,11 @@
 02_python/.ipynb_checkpoints
 
 markdown/.Rhistory
+
+credentials.py
+
+.idea/
+
+_work/README.md
+_work/01_r-markdown/*.Rmd
+_work/02_python/*.ipynb
