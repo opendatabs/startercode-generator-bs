@@ -1,10 +1,10 @@
-# 🚀 Starter Code Generator Munich
+# 🚀 Starter Code Generator Basel-Stadt
 
 ### Automatically generate Python and R starter code for Open Government Data Shops
 
 
 ## Overview
-This repo provides a Python script that generates starter code notebooks from a metadata JSON of open data shops. You can execute the script manually or trigger it regularly (e.g. every night) with a GitHub Action that we provide here too and by that create code notebooks for every dataset in your data shop. 
+This repo provides a Python script that generates starter code notebooks from a metadata JSON of open data shops. You can execute the script manually or trigger it regularly (e.g. every night) with a GitHub Action that is provided here too and by that create code notebooks for every dataset in your data shop. 
 
 The script also generates a README file that contains a list of all datasets and links to the corresponding notebooks that you can use as an overview for your users. You can expose this easily as a website with GitHub Pages.
 
@@ -18,10 +18,10 @@ The result of this starter code looks: [it-at-m.github.io/startercode-opendata-m
 ## How does it work?
 The system works with two repos. 
 - The **first repo** contains the code from this repo here that creates the notebooks and the overview README. 
-- A GitHub Actin workflow instantiates a container, installs the necessary dependencies, clones the repo, and executes the script. 
+- A GitHub Action workflow instantiates a container, installs the necessary dependencies, clones the repo, and executes the script. 
 - Once the notebooks are created the workflow will push these to a **second repo** that you can make available for your users.
 
-The script works with templates that are stored in – you gessed it – `_templates`. You easily can adapt these according to your ideas. Just make sure that you keep the necessary placeholders (marked with double curly brackets) in the templates. The script will replace them with values from the metadata JSON.
+The script works with templates that are stored in – you guessed it – `_templates`. You easily can adapt these according to your ideas. Just make sure that you keep the necessary placeholders (marked with double curly brackets) in the templates. The script will replace them with values from the metadata JSON.
 
 The code works out of the box with the [metadata API of the open data shop of the Canton of Zurich](https://www.web.statistik.zh.ch/ogd/datenkatalog/standalone/datasets/1461@fachstelle-ogd-kanton-zuerich). It can be easily adapted to other data shops. E.g. [here is a repo with starter code notebooks for all CSV data set on opendata.swiss](https://github.com/rnckp/starter-code_opendataswiss).
 

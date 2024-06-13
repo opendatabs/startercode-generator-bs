@@ -159,11 +159,15 @@ def create_overview(data, header):
     baselink_py_gh = f"https://github.com/{GITHUB_ACCOUNT}/{REPO_NAME}/blob/{REPO_BRANCH}/{REPO_PYTHON_OUTPUT}"
     baselink_py_colab = f"https://githubtocolab.com/{GITHUB_ACCOUNT}/{REPO_NAME}/blob/{REPO_BRANCH}/{REPO_PYTHON_OUTPUT}"
 
+    binder_base_url = f"https://mybinder.org/v2/gh/{GITHUB_ACCOUNT}/{REPO_NAME}/{REPO_BRANCH}"
+    binder_py_link = f"{binder_base_url}?filepath={REPO_PYTHON_OUTPUT}"
+    binder_r_link = f"{binder_base_url}?urlpath=rstudio/{REPO_R_MARKDOWN_OUTPUT}"
+
     md_doc = []
     md_doc.append(header)
     md_doc.append(
-        f"| ID | Title (abbreviated to {TITLE_MAX_CHARS} chars) | Python Colab | Python GitHub | R GitHub |\n")
-    md_doc.append("| :-- | :-- | :-- | :-- | :-- |\n")
+        f"| ID | Title (abbreviated to {TITLE_MAX_CHARS} chars) | Python Binder (Jupyter) | R Binder (RStudio) | Python Colab | Python GitHub | R GitHub |\n")
+    md_doc.append("| :-- | :-- | :-- | :-- | :-- | :-- | :-- |\n")
 
     for idx in tqdm(data.index):
         identifier = data.loc[idx, "dataset_identifier"]
@@ -178,9 +182,11 @@ def create_overview(data, header):
         r_gh_link = f'[R GitHub]({baselink_r_gh}{identifier}.Rmd)'
         py_gh_link = f'[Python GitHub]({baselink_py_gh}{identifier}.ipynb)'
         py_colab_link = f'[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)]({baselink_py_colab}{identifier}.ipynb)'
+        py_binder_link = f'[![Jupyter Binder](https://mybinder.org/badge_logo.svg)]({binder_py_link}{identifier}.ipynb)'
+        r_binder_link = f'[![RStudio Binder](https://mybinder.org/badge_logo.svg)]({binder_r_link}{identifier}.Rmd)'
 
         md_doc.append(
-            f"| {identifier.split('@')[0]} | [{title_clean}]({ds_link}) | {py_colab_link} | {py_gh_link} | {r_gh_link} |\n")
+            f"| {identifier.split('@')[0]} | [{title_clean}]({ds_link}) |{py_binder_link} | {r_binder_link} | {py_colab_link} | {py_gh_link} | {r_gh_link} |\n")
 
     md_doc = "".join(md_doc)
 
