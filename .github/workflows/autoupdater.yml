@@ -4,6 +4,7 @@ on:
   push:
   schedule:
     - cron: '35 3 * * 6'
+  workflow_dispatch:
 
 jobs:
   python_script:
