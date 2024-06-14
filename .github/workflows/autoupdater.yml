@@ -3,7 +3,7 @@ run-name: autoupdater
 on:
   push:
   schedule:
-    - cron: '35 3 * * 2'
+    - cron: '35 3 * * 6'
 
 jobs:
   python_script:
@@ -28,8 +28,7 @@ jobs:
           API_TOKEN_GITHUB: ${{ secrets.PAT }}
         with:
           source-directory: '_work'
-          destination-github-username: 'it-at-m'
-          destination-repository-name: 'startercode-opendata-munich'
+          destination-github-username: 'opendatabs'
+          destination-repository-name: 'startercode'
           target-branch: main
           commit-message: "Updates"
-          
