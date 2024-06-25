@@ -22,7 +22,7 @@ SHOP_METADATA_LINK = "https://data.bs.ch/api/explore/v2.1/catalog/datasets/10005
 CONTACT = "Fachstelle für OGD Basel-Stadt | opendata@bs.ch"
 
 GITHUB_ACCOUNT = "opendatabs"
-REPO_NAME = "startercode"
+REPO_NAME = "startercode-opendatabs"
 REPO_BRANCH = "main"
 REPO_R_MARKDOWN_OUTPUT = "01_r-markdown/"
 REPO_PYTHON_OUTPUT = "02_python/"
