@@ -164,7 +164,7 @@ def create_overview(data, header):
     baselink_py_gh = f"https://github.com/{GITHUB_ACCOUNT}/{REPO_NAME}/blob/{REPO_BRANCH}/{REPO_PYTHON_OUTPUT}"
     baselink_py_colab = f"https://githubtocolab.com/{GITHUB_ACCOUNT}/{REPO_NAME}/blob/{REPO_BRANCH}/{REPO_PYTHON_OUTPUT}"
 
-
+    renku_base_url = f"https://renkulab.io/projects/{GITHUB_ACCOUNT}/{REPO_NAME}/sessions/new?autostart=1"
     binder_base_url = f"https://mybinder.org/v2/gh/{GITHUB_ACCOUNT}/{REPO_NAME}/{REPO_BRANCH}"
     binder_lab_link = f"{binder_base_url}?urlpath=lab"
     binder_r_link = f"{binder_base_url}?urlpath=rstudio"
@@ -172,6 +172,9 @@ def create_overview(data, header):
 
     md_doc = []
     md_doc.append(header)
+    md_doc.append(
+        f"### Renku: [![launch - renku](https://renkulab.io/renku-badge.svg)]({renku_base_url})\n"
+    )
     md_doc.append(
        f"### Jupyter Lab: [![Binder](https://mybinder.org/badge_logo.svg)]({binder_lab_link})\n"
     )
