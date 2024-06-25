@@ -15,3 +15,7 @@ credentials.py
 _work/README.md
 _work/01_r-markdown/*.Rmd
 _work/02_python/*.ipynb
+
+_work_renku/README.md
+_work_renku/01_r-markdown/*.Rmd
+_work_renku/02_python/*.ipynb
