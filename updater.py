@@ -215,7 +215,6 @@ def create_overview(data, header):
 # CREATE CODE FILES ---------------------------------------------------------- #
 
 df = get_current_json()
-
 df = sort_data(df)
 df = prepare_data_for_codebooks(df)
 
