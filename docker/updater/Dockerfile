@@ -9,5 +9,7 @@ CMD ["python3", "-m", "updater"]
 
 
 # Docker commands to create image and run container:
+# cd docker/updater
 # docker build -t startercode-generator-bs .
+# cd ../..
 # docker run -it --rm -v /data/dev/workspace/startercode-generator-bs:/code/startercode-generator-bs  --name startercode-generator-bs startercode-generator-bs
