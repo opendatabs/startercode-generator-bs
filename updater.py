@@ -25,7 +25,8 @@ GITHUB_ACCOUNT = "opendatabs"
 REPO_NAME = "startercode-opendatabs"
 REPO_BRANCH = "main"
 REPO_R_MARKDOWN_OUTPUT = "01_r-markdown/"
-REPO_PYTHON_OUTPUT = "02_python/"
+REPO_R_NOTEBOOK_OUTPUT = "02_r-notebook/"
+REPO_PYTHON_OUTPUT = "03_python/"
 TEMP_PREFIX = "_work/"
 TEMP_PREFIX_RENKU = "_work_renku/"
 
@@ -33,6 +34,7 @@ TEMPLATE_FOLDER = "_templates/"
 TEMPLATE_HEADER = "template_header.md"
 TEMPLATE_PYTHON = "template_python.ipynb"
 TEMPLATE_RMARKDOWN = "template_rmarkdown.Rmd"
+TEMPLATE_RNOTEBOOK = "template_rnotebook.ipynb"
 
 TODAY_DATE = datetime.today().strftime('%Y-%m-%d')
 TODAY_DATETIME = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
@@ -148,6 +150,42 @@ def create_rmarkdown(data):
         with open(f'{TEMP_PREFIX_RENKU}{REPO_R_MARKDOWN_OUTPUT}{identifier}.Rmd', 'w', encoding='utf-8') as file:
             file.write("".join(rmd))
 
+def create_rnotebooks(data):
+    """Create Jupyter Notebooks with R starter code"""
+    for idx in tqdm(data.index):
+        with open(f"{TEMPLATE_FOLDER}{TEMPLATE_RNOTEBOOK}") as file:
+            r_nb = file.read()
+
+        # populate template with metadata
+        identifier = data.loc[idx, "dataset_identifier"]
+        r_nb = r_nb.replace("{{ PROVIDER }}", PROVIDER)
+        r_nb = r_nb.replace("{{ DATASET_TITLE }}", re.sub(
+            "\"", "\'", data.loc[idx, "title"]))
+
+        r_nb = r_nb.replace("{{ DATASET_DESCRIPTION }}", re.sub(
+            "\"", "\'", data.loc[idx, "description"]))
+        r_nb = r_nb.replace("{{ DATASET_IDENTIFIER }}", identifier)
+        r_nb = r_nb.replace("{{ DATASET_METADATA }}", re.sub(
+            "\"", "\'", data.loc[idx, "metadata"]))
+        r_nb = r_nb.replace("{{ TODAY_DATE }}", TODAY_DATE)
+        ds_link = f'[Direct data shop link for dataset]({BASELINK_DATASHOP}{identifier})'
+        r_nb = r_nb.replace("{{ DATASHOP_LINK }}", ds_link)
+
+        download_link = f"{BASELINK_DATASHOP}{identifier}/download"
+        code_block = f"df = get_dataset('{download_link}')"
+        r_nb = r_nb.replace("{{ LOAD_DATA }}", code_block)
+
+        r_nb = r_nb.replace("{{ CONTACT }}", CONTACT)
+
+        # to properly populate the code cell for data set import
+        # we need to operate on the actual JSON rather than use simple string replacement
+        r_nb = json.loads(r_nb, strict=False)
+
+        # save to disk
+        with open(f'{TEMP_PREFIX}{REPO_R_NOTEBOOK_OUTPUT}{identifier}.ipynb', 'w') as file:
+            file.write(json.dumps(r_nb))
+        with open(f'{TEMP_PREFIX_RENKU}{REPO_R_NOTEBOOK_OUTPUT}{identifier}.ipynb', 'w') as file:
+            file.write(json.dumps(r_nb))
 
 def get_header(dataset_count):
     """Retrieve header template and populate with date and count of data records"""
@@ -163,6 +201,7 @@ def create_overview(data, header):
     baselink_r_gh = f"https://github.com/{GITHUB_ACCOUNT}/{REPO_NAME}/blob/{REPO_BRANCH}/{REPO_R_MARKDOWN_OUTPUT}"
     baselink_py_gh = f"https://github.com/{GITHUB_ACCOUNT}/{REPO_NAME}/blob/{REPO_BRANCH}/{REPO_PYTHON_OUTPUT}"
     baselink_py_colab = f"https://githubtocolab.com/{GITHUB_ACCOUNT}/{REPO_NAME}/blob/{REPO_BRANCH}/{REPO_PYTHON_OUTPUT}"
+    baselink_r_colab = f"https://githubtocolab.com/{GITHUB_ACCOUNT}/{REPO_NAME}/blob/{REPO_BRANCH}/{REPO_R_NOTEBOOK_OUTPUT}"
 
     renku_base_url = f"https://renkulab.io/projects/{GITHUB_ACCOUNT}/{REPO_NAME}/sessions/new?autostart=1"
     binder_base_url = f"https://mybinder.org/v2/gh/{GITHUB_ACCOUNT}/{REPO_NAME}/{REPO_BRANCH}"
@@ -183,8 +222,8 @@ def create_overview(data, header):
     )
     md_doc.append(f"## Overview of datasets\n")
     md_doc.append(
-        f"| ID | Title (abbreviated to {TITLE_MAX_CHARS} chars) | Python Binder (Jupyter Notebook) | Python Colab | Python GitHub | R GitHub |\n")
-    md_doc.append("| :-- | :-- | :-- | :-- | :-- | :-- |\n")
+        f"| ID | Title (abbreviated to {TITLE_MAX_CHARS} chars) | Python Binder (Jupyter Notebook) | Python Colab | R Colab | Python GitHub | R GitHub |\n")
+    md_doc.append("| :-- | :-- | :-- | :-- | :-- | :-- | :-- |\n")
 
     for idx in tqdm(data.index):
         identifier = data.loc[idx, "dataset_identifier"]
@@ -199,10 +238,11 @@ def create_overview(data, header):
         r_gh_link = f'[R GitHub]({baselink_r_gh}{identifier}.Rmd)'
         py_gh_link = f'[Python GitHub]({baselink_py_gh}{identifier}.ipynb)'
         py_colab_link = f'[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)]({baselink_py_colab}{identifier}.ipynb)'
+        r_colab_link = f'[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)]({baselink_r_colab}{identifier}.ipynb)'
         py_binder_link = f'[![Jupyter Binder](https://mybinder.org/badge_logo.svg)]({binder_py_link}{identifier}.ipynb)'
 
         md_doc.append(
-            f"| {identifier.split('@')[0]} | [{title_clean}]({ds_link}) |{py_binder_link} | {py_colab_link} | {py_gh_link} | {r_gh_link} |\n")
+            f"| {identifier.split('@')[0]} | [{title_clean}]({ds_link}) |{py_binder_link} | {py_colab_link} | {r_colab_link} | {py_gh_link} | {r_gh_link} |\n")
 
     md_doc = "".join(md_doc)
 
@@ -220,6 +260,7 @@ df = prepare_data_for_codebooks(df)
 
 create_python_notebooks(df)
 create_rmarkdown(df)
+create_rnotebooks(df)
 
 header = get_header(len(df))
 create_overview(df, header)
