@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Load the GitHub token from a file
-GITHUB_TOKEN=$(cat ~/.github_token)
+GITHUB_TOKEN=$(cat /root/.github_token)
 
 # Load Git user name and email from the configuration file
-source ~/.gitconfig_info
+source /root/.gitconfig_info
 
 # Configure git to use the token for authentication
 git config --global --add safe.directory /code/startercode-generator-bs/_work
