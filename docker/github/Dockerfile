@@ -13,6 +13,6 @@ CMD ["/bin/bash", "/code/startercode-generator-bs/update_github.sh"]
 
 # Docker commands to create image and run container:
 # cd docker/github
-# docker build --build-arg https_proxy="http://your-proxy-server:port" -t update_github .
+# docker build --build-arg https_proxy="http://your-proxy-server:port" --build-arg GITHUB_TOKEN="your_github_token"  --build-arg GIT_USER_EMAIL="your_e-mail"  --build-arg GIT_USER_NAME="your_username" -t update_github .
 # cd ../.
 # docker run -it --rm -e https_proxy="http://your-proxy-server:port" -v /data/dev/workspace/startercode-generator-bs:/code/startercode-generator-bs --name update_github update_github
