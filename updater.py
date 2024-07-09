@@ -222,7 +222,7 @@ def create_overview(data, header):
     )
     md_doc.append(f"## Overview of datasets\n")
     md_doc.append(
-        f"| ID | Title (abbreviated to {TITLE_MAX_CHARS} chars) | Python Binder (Jupyter Notebook) | Python Colab | R Colab | Python GitHub | R GitHub |\n")
+        f"| ID | Title (abbreviated to {TITLE_MAX_CHARS} chars) | Python Binder | Python Colab | R Colab | Python GitHub | R GitHub |\n")
     md_doc.append("| :-- | :-- | :-- | :-- | :-- | :-- | :-- |\n")
 
     for idx in tqdm(data.index):
