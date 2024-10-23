@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Load the GitLab token from a file
-GITLAB_TOKEN=$(cat /root/.renku_token)
+GITLAB_TOKEN=$(cat /root/.git_token)
 # Load Git user name and email from the configuration file
 source /root/.gitconfig_info
 # Configure git to use the token for authentication
