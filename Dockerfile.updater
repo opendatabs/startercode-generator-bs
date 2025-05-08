@@ -1,0 +1,7 @@
+FROM python:3.11-bullseye
+WORKDIR /code/startercode-generator-bs
+RUN python3 -m pip install --user --no-cache-dir pandas==2.2.0
+RUN python3 -m pip install --user --no-cache-dir requests==2.31.0
+RUN python3 -m pip install --user --no-cache-dir tqdm==4.66.4
+CMD ["python3", "-m", "updater"]
+
