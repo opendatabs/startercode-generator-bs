@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -29,19 +29,26 @@ jobs:
           git checkout -b main origin/main
           git pull origin main
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
-          python-version: '3.12'
-
-      - name: Install Python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install pandas requests tqdm
+          version: "0.7.3"
       
-      - name: Run updater
-        run: python updater.py
+      - name: "Set up Python"
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: ".python-version"
 
+      - name: Install dependencies with uv
+        run: uv sync --frozen
+      
+      - name: Run updater and format with ruff
+        run: |
+          uv run updater.py
+          ruff check --select I --fix
+          ruff check --fix
+          ruff format
+      
       - name: Commit and push
         run: |
           git config --global user.email "${{ secrets.GIT_USER_EMAIL }}"
