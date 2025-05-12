@@ -42,12 +42,8 @@ jobs:
       - name: Install dependencies with uv
         run: uv sync --frozen
       
-      - name: Run updater and format with ruff
-        run: |
-          uv run updater.py
-          ruff check --select I --fix
-          ruff check --fix
-          ruff format
+      - name: Run updater
+        run: uv run updater.py
       
       - name: Commit and push
         run: |
