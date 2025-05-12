@@ -1,0 +1,50 @@
+name: Update Starter Code and Push to Repo
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  update-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout generator repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install Python dependencies
+        run: |
+          pip install pandas requests tqdm
+
+      - name: Run updater.py
+        run: python updater.py
+
+      - name: Checkout target repo (startercode-opendatabs)
+        uses: actions/checkout@v3
+        with:
+          repository: opendatabs/startercode-opendatabs
+          path: target-repo
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: Copy updated files
+        run: |
+          rsync -a --delete _work/ target-repo/
+
+      - name: Commit and push changes
+        working-directory: target-repo
+        run: |
+          git config user.name "${{ secrets.GIT_USER_NAME }}"
+          git config user.email "${{ secrets.GIT_USER_EMAIL }}"
+          git add .
+          if git diff-index --quiet HEAD; then
+            echo "No changes to commit"
+          else
+            git commit -m "Automated update on $(date)"
+            git push
+          fi
