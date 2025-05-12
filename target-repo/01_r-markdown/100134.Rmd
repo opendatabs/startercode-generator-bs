@@ -1,0 +1,145 @@
+---
+title: "Open Government Data, provided by Statistisches Amt des Kantons Basel-Stadt - Fachstelle OGD"
+date: "2025-05-12"
+output: html_document
+---
+
+## Dataset: Coronavirus (Covid-19): Teststellen
+
+[Direct data shop link for dataset](https://data.bs.ch/explore/dataset/100134)
+
+Auto generated R starter code for data set 100134.
+
+## Metadata
+
+- **Dataset_identifier** `100134`
+- **Title** `Coronavirus (Covid-19): Teststellen`
+- **Description** `<p>Eine Übersicht der Standorte, an welchen sich die Bevölkerung während der Corona-Pandemie auf SARS-CoV-2 testen lassen konnte. Für Kinder werden von gewissen Teststellen zusätzlich zum Abstrich im Rachenbereich alternative Testmethoden angeboten. </p><p><b>Der Datensatz wurde vom Gesundheitsdepartement aktuell gehalten. Dieser wird seit 8. März 2023 nicht mehr aktualisiert. Man kann sich weiterhin bei einzelnen Arztpraxen und Institutionen testen lassen.</b></p><p>Weitere Informationen zum Coronavirus in Basel-Stadt sind hier zu finden: <a href="https://www.bs.ch/gd/md/gesundheitsschutz/uebertragbarekrankheiten/grippe-corona-und-co" target="_blank">https://www.bs.ch/gd/md/gesundheitsschutz/uebertragbarekrankheiten/grippe-corona-und-co</a></p>`
+- **Contact_name** `Open Data Basel-Stadt`
+- **Issued** `2021-06-06`
+- **Modified** `2024-10-08T11:28:36+00:00`
+- **Rights** `NonCommercialAllowed-CommercialAllowed-ReferenceRequired`
+- **Temporal_coverage_start_date** `None`
+- **Temporal_coverage_end_date** `None`
+- **Themes** `['Gesundheit']`
+- **Keywords** `['Corona', 'COVID-19', 'Spital', 'Krankheit', 'Coronavirus', 'Virus', 'Pandemie', 'Test', 'Lungenentzündung']`
+- **Publisher** `Medizinische Dienste`
+- **Reference** `www.geo.bs.ch/coronatest; https://www.geocat.ch/geonetwork/srv/ger/catalog.search#/metadata/cbfb3123-a515-4a72-8c38-40da761070a0`
+
+
+# Load packages
+
+```{r}
+
+library(tidyverse)
+```
+
+# Load data
+
+The dataset is read into a dataframe
+
+```{r}
+get_dataset <- function(url) {
+  # Create directory if it does not exist
+  data_path <- file.path(getwd(), '..', 'data')
+  if (!dir.exists(data_path)) {
+    dir.create(data_path, recursive = TRUE)
+  }
+  # Download the CSV file
+  csv_path <- file.path(data_path , '100134.csv')
+  download.file(url, csv_path, mode = "wb")
+
+  # Read the CSV file
+  data <- tryCatch(
+      read.csv(csv_path, sep = ";", stringsAsFactors = FALSE, encoding = "UTF-8"),
+      warning = function(w) NULL,
+      error = function(e) NULL
+  )
+  # if dataframe only has one column or less the data is not ";" separated
+  if (is.null(data) || ncol(data) <= 1) {
+      stop("The data wasn't imported properly. Very likely the correct separator couldn't be found.\nPlease check the dataset manually and adjust the code.")
+  }
+  return(data)
+}
+```
+
+```{r}
+
+df <- get_dataset('https://data.bs.ch/explore/dataset/100134/download?format=csv&timezone=Europe%2FZurich')
+
+```
+
+# Analyze data
+
+```{r}
+
+glimpse(df)
+str(df)
+
+head(df)
+tail(df)
+
+```
+
+```{r}
+# Remove columns that have no values
+df <- Filter(function(x) !all(is.na(x)), df)
+
+# Remove rows with missing values (if appropriate)
+df <- na.omit(df)
+```
+
+```{r}
+# display a small random sample transposed in order to see all variables
+t(sample_n(df, 5))
+```
+
+```{r}
+# the size of the data frame in memory
+size <- object.size(df)
+#  the size in bytes
+print(size)
+```
+
+```{r}
+# describe numerical features
+summary(df[, sapply(df, is.numeric)])
+```
+
+```{r}
+# describe non-numerical features
+summary(df[, sapply(df, Negate(is.numeric))])
+```
+
+```{r}
+# check missing values
+df %>%
+  mutate(row = row_number()) %>%
+  gather(key = "variable", value = "value", -row) %>%
+  ggplot(aes(x = variable, y = row)) +
+  geom_tile(aes(fill = is.na(value)), color = "black") +
+  scale_fill_manual(values = c("TRUE" = "grey", "FALSE" = "red")) +
+  labs(x = "", y = "", fill = "Missing") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r}
+# plot a histogram for each numerical feature
+df %>%
+  select_if(is.numeric) %>%
+  gather() %>%
+  ggplot( aes(value)) +
+  geom_histogram(bins = 10, color = "white", fill = "red") +
+    facet_wrap(~key, scales = 'free_x')
+```
+
+# Continue your code here...
+
+```{r}
+
+```
+------------------------------------------------------------------------
+
+# Questions about the data?
+
+Fachstelle für OGD Basel-Stadt | opendata@bs.ch
