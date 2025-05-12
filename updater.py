@@ -27,7 +27,6 @@ REPO_R_MARKDOWN_OUTPUT = "01_r-markdown/"
 REPO_R_NOTEBOOK_OUTPUT = "02_r-notebook/"
 REPO_PYTHON_OUTPUT = "03_python/"
 TEMP_PREFIX = "_work/"
-TEMP_PREFIX_RENKU = "_work_renku/"
 
 TEMPLATE_FOLDER = "_templates/"
 TEMPLATE_HEADER = "template_header.md"
@@ -114,8 +113,6 @@ def create_python_notebooks(data):
         # save to disk
         with open(f'{TEMP_PREFIX}{REPO_PYTHON_OUTPUT}{identifier}.ipynb', 'w') as file:
             file.write(json.dumps(py_nb))
-        with open(f'{TEMP_PREFIX_RENKU}{REPO_PYTHON_OUTPUT}{identifier}.ipynb', 'w') as file:
-            file.write(json.dumps(py_nb))
 
 
 def create_rmarkdown(data):
@@ -145,8 +142,6 @@ def create_rmarkdown(data):
 
         # save to disk
         with open(f'{TEMP_PREFIX}{REPO_R_MARKDOWN_OUTPUT}{identifier}.Rmd', 'w', encoding='utf-8') as file:
-            file.write("".join(rmd))
-        with open(f'{TEMP_PREFIX_RENKU}{REPO_R_MARKDOWN_OUTPUT}{identifier}.Rmd', 'w', encoding='utf-8') as file:
             file.write("".join(rmd))
 
 def create_rnotebooks(data):
@@ -182,8 +177,6 @@ def create_rnotebooks(data):
 
         # save to disk
         with open(f'{TEMP_PREFIX}{REPO_R_NOTEBOOK_OUTPUT}{identifier}.ipynb', 'w') as file:
-            file.write(json.dumps(r_nb))
-        with open(f'{TEMP_PREFIX_RENKU}{REPO_R_NOTEBOOK_OUTPUT}{identifier}.ipynb', 'w') as file:
             file.write(json.dumps(r_nb))
 
 def get_header(dataset_count):
@@ -247,9 +240,6 @@ def create_overview(data, header):
 
     with open(f"{TEMP_PREFIX}README.md", "w", encoding='utf-8') as file:
         file.write(md_doc)
-    with open(f"{TEMP_PREFIX_RENKU}README.md", "w", encoding='utf-8') as file:
-        file.write(md_doc)
-
 
 # CREATE CODE FILES ---------------------------------------------------------- #
 
