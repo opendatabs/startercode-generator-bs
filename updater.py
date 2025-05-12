@@ -6,7 +6,6 @@ import json
 import re
 from datetime import datetime
 from tqdm import tqdm
-import credentials
 
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -52,7 +51,7 @@ KEYS_DATASET = ['dataset_identifier', 'title', 'description', 'contact_name',
 # FUNCTIONS ------------------------------------------------------------------ #
 def get_current_json():
     """Request metadata catalogue from data shop"""
-    res = requests.get(SHOP_METADATA_LINK, proxies=credentials.proxies)
+    res = requests.get(SHOP_METADATA_LINK)
     # # save with date to allow for later error and change analysis
     # with open(f"{PATH_METADATA}{TODAY_DATE}.json", "wb") as file:
     # file.write(res.content)
