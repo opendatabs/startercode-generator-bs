@@ -5,6 +5,9 @@ on:
     - cron: '0 8/12 * * *'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   update:
     runs-on: ubuntu-latest
@@ -14,43 +17,39 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Configure Git
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-
       - name: Create and prepare _work directory
         run: |
           mkdir _work
           cd _work
           git init
-          git remote add origin https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/opendatabs/startercode-opendatabs.git
+          git remote add origin https://github.com/${{ github.repository }}.git
           git fetch origin main
-          git checkout -b main origin/main
-          git pull origin main
+          git checkout -B main origin/main
 
       - name: Install uv
         uses: astral-sh/setup-uv@v6
         with:
           version: "0.8.17"
-      
-      - name: "Set up Python"
+
+      - name: Set up Python
         uses: actions/setup-python@v6
         with:
           python-version-file: ".python-version"
 
       - name: Install dependencies with uv
         run: uv sync --frozen
-      
+
       - name: Run updater
         run: uv run updater.py
-      
-      - name: Commit and push
+        working-directory: ./_work
+
+      - name: Commit and push (as github-actions[bot])
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git config --global user.email "${{ secrets.GIT_USER_EMAIL }}"
-          git config --global user.name "${{ secrets.GIT_USER_NAME }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions@github.com"
           git add .
           git commit -m "Automated update on $(date -u '+%Y-%m-%d %H:%M:%S UTC')" || echo "Nothing to commit"
-          git push origin main
+          git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git HEAD:main
         working-directory: ./_work
-        
