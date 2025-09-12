@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -21,6 +21,7 @@ jobs:
 
       - name: Create and prepare _work directory
         run: |
+          mkdir _work
           cd _work
           git init
           git remote add origin https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/opendatabs/startercode-opendatabs.git
@@ -31,10 +32,10 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v6
         with:
-          version: "0.8.17"
+          version: "0.7.3"
       
       - name: "Set up Python"
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v5
         with:
           python-version-file: ".python-version"
 
