@@ -21,7 +21,6 @@ jobs:
 
       - name: Create and prepare _work directory
         run: |
-          mkdir _work
           cd _work
           git init
           git remote add origin https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/opendatabs/startercode-opendatabs.git
