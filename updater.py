@@ -245,7 +245,6 @@ def create_marimo_apps(data):
         app_src = app_src.replace("{{ DATASET_ID }}", py_literal(id_short))
 
         out_path = f"{TEMP_PREFIX}04_marimo/{id_short}.py"
-        os.makedirs(os.path.dirname(out_path), exist_ok=True)
         with open(out_path, "w", encoding="utf-8") as f:
             f.write(app_src)
 
