@@ -5,6 +5,12 @@ on:
     - cron: '0 8/12 * * *'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
+env:
+  OUTPUT_DIR: docs/marimo
+
 jobs:
   update:
     runs-on: ubuntu-latest
@@ -44,7 +50,36 @@ jobs:
       
       - name: Run updater
         run: uv run updater.py
-      
+
+      - name: Export marimo apps to HTML (WebAssembly)
+        working-directory: ./_work
+        run: |
+          mkdir -p "${OUTPUT_DIR}"
+          # Export each marimo app (*.py in 04_marimo) as run-mode HTML
+          for f in 04_marimo/*.py; do
+            [ -e "$f" ] || continue
+            uvx marimo export html-wasm --sandbox --mode run --no-show-code "$f" -o "${OUTPUT_DIR}/$(basename "${f%.py}").html"
+          done
+          # Add a tiny index
+          cat > "${OUTPUT_DIR}/index.html" << 'HTML'
+          <!doctype html>
+          <meta charset="utf-8">
+          <title>marimo apps</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <h1>marimo apps</h1>
+          <ul>
+          <!-- LIST_START -->
+          HTML
+          for f in "${OUTPUT_DIR}"/*.html; do
+            name=$(basename "$f")
+            [ "$name" = "index.html" ] && continue
+            echo "<li><a href=\"$name\">$name</a></li>" >> "${OUTPUT_DIR}/index.html"
+          done
+          echo "</ul>" >> "${OUTPUT_DIR}/index.html"
+
+          # Ensure Pages doesn’t run Jekyll on this subdir
+          touch "${OUTPUT_DIR}/.nojekyll"
+
       - name: Commit and push
         run: |
           git config --global user.name "github-actions"
