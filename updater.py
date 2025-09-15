@@ -29,6 +29,7 @@ REPO_BRANCH = "main"
 REPO_R_MARKDOWN_OUTPUT = "01_r-markdown/"
 REPO_R_NOTEBOOK_OUTPUT = "02_r-notebook/"
 REPO_PYTHON_OUTPUT = "03_python/"
+REPO_MARIMO_OUTPUT = "04_marimo/"
 TEMP_PREFIX = "_work/"
 
 TEMPLATE_FOLDER = "_templates/"
@@ -36,6 +37,7 @@ TEMPLATE_HEADER = "template_header.md"
 TEMPLATE_PYTHON = "template_python.ipynb"
 TEMPLATE_RMARKDOWN = "template_rmarkdown.Rmd"
 TEMPLATE_RNOTEBOOK = "template_rnotebook.ipynb"
+TEMPLATE_MARIMO = "template_marimo.py"
 
 TODAY_DATE = datetime.today().strftime("%Y-%m-%d")
 TODAY_DATETIME = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
@@ -74,9 +76,7 @@ def get_current_json():
 
 def sort_data(data):
     """Sort by integer prefix of identifier"""
-    data["id_short"] = df.dataset_identifier.apply(lambda x: x.split("@")[0]).astype(
-        int
-    )
+    data["id_short"] = data.dataset_identifier.apply(lambda x: x.split("@")[0]).astype(int)
     data.sort_values("id_short", inplace=True)
     data.reset_index(drop=True, inplace=True)
     return data
@@ -213,6 +213,36 @@ def create_rnotebooks(data):
             file.write(json.dumps(r_nb))
 
 
+def create_marimo_apps(data):
+    """Create marimo apps (Polars-based)"""
+    for idx in tqdm(data.index):
+        with open(f"{TEMPLATE_FOLDER}{TEMPLATE_MARIMO}", encoding="utf-8") as file:
+            app_src = file.read()
+
+        identifier = data.loc[idx, "dataset_identifier"]
+
+        # Populate placeholders (simple string replaces; file is Python, not JSON)
+        app_src = app_src.replace("{{ PROVIDER }}", PROVIDER)
+        app_src = app_src.replace("{{ DATASET_TITLE }}", re.sub('"', "'", data.loc[idx, "title"]))
+        app_src = app_src.replace("{{ DATASET_DESCRIPTION }}", re.sub('"', "'", data.loc[idx, "description"]))
+        app_src = app_src.replace("{{ DATASET_IDENTIFIER }}", identifier)
+        app_src = app_src.replace("{{ DATASET_METADATA }}", re.sub('"', "'", data.loc[idx, "metadata"]))
+        app_src = app_src.replace("{{ CONTACT }}", CONTACT)
+
+        ds_link = f"[Direct data shop link for dataset]({BASELINK_DATASHOP}{identifier})"
+        app_src = app_src.replace("{{ DATASHOP_LINK }}", ds_link)
+
+        # Same pattern you use elsewhere
+        download_link = f"{BASELINK_DATASHOP}{identifier}/download"
+        code_block = f"df = get_dataset('{download_link}')"
+        app_src = app_src.replace("{{LOAD_DATA}}", code_block)
+
+        # Save
+        out_path = f"{TEMP_PREFIX}{REPO_MARIMO_OUTPUT}{identifier}.py"
+        with open(out_path, "w", encoding="utf-8") as f:
+            f.write(app_src)
+
+
 def get_header(dataset_count):
     """Retrieve header template and populate with date and count of data records"""
     with open(f"{TEMPLATE_FOLDER}{TEMPLATE_HEADER}", encoding="utf-8") as file:
@@ -288,6 +318,7 @@ df = prepare_data_for_codebooks(df)
 create_python_notebooks(df)
 create_rmarkdown(df)
 create_rnotebooks(df)
+create_marimo_apps(df)
 
 header = get_header(len(df))
 create_overview(df, header)
