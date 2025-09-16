@@ -10,6 +10,7 @@ permissions:
 
 env:
   OUTPUT_DIR: marimo
+  MARIMO_VERSION: "0.15.5"
 
 jobs:
   update:
@@ -54,11 +55,17 @@ jobs:
       - name: Export marimo apps to HTML (WebAssembly)
         working-directory: ./_work
         run: |
+          # Clean output to avoid stale asset bundles
+          rm -rf "${OUTPUT_DIR}"
           mkdir -p "${OUTPUT_DIR}"
-          # Export each marimo app (*.py in 04_marimo) as run-mode HTML
+
+          # Export each marimo app (*.py in 04_marimo) as EDIT-mode HTML
           for f in 04_marimo/*.py; do
             [ -e "$f" ] || continue
-            uvx marimo export html-wasm --mode edit "$f" -o "${OUTPUT_DIR}/$(basename "${f%.py}").html"
+            uvx --from "marimo==${MARIMO_VERSION}" marimo export html-wasm \
+              --sandbox \
+              --mode edit \
+              "$f" -o "${OUTPUT_DIR}/$(basename "${f%.py}").html"
           done
 
           # Ensure Pages doesn’t run Jekyll on this subdir
