@@ -8,10 +8,6 @@ on:
 permissions:
   contents: write
 
-env:
-  OUTPUT_DIR: marimo
-  MARIMO_VERSION: "0.15.5"
-
 jobs:
   update:
     runs-on: ubuntu-latest
@@ -51,24 +47,6 @@ jobs:
       
       - name: Run updater
         run: uv run updater.py
-
-      - name: Export marimo apps to HTML (WebAssembly)
-        working-directory: ./_work
-        run: |
-          # Clean output to avoid stale or missing bundles
-          rm -rf "${OUTPUT_DIR}"
-          mkdir -p "${OUTPUT_DIR}"
-
-          # Export each notebook using the same marimo version
-          for f in 04_marimo/*.py; do
-            [ -e "$f" ] || continue
-            uvx --from "marimo==${MARIMO_VERSION}" marimo export html-wasm \
-              --mode edit \
-              "$f" -o "${OUTPUT_DIR}/$(basename "${f%.py}").html"
-          done
-
-          # Ensure Pages doesn’t run Jekyll on this subdir
-          touch "${OUTPUT_DIR}/.nojekyll"
 
       - name: Commit and push
         run: |
