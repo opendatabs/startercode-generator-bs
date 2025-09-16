@@ -55,15 +55,19 @@ jobs:
       - name: Export marimo apps to HTML (WebAssembly)
         working-directory: ./_work
         run: |
-          # Clean output to avoid stale asset bundles
+          # Clean output to avoid stale or missing bundles
           rm -rf "${OUTPUT_DIR}"
           mkdir -p "${OUTPUT_DIR}"
 
-          # Export each marimo app (*.py in 04_marimo) as EDIT-mode HTML
+          # 1) Copy the EDIT-mode assets exactly once
+          uvx --from "marimo==${MARIMO_VERSION}" marimo assets copy \
+            --mode edit \
+            -o "${OUTPUT_DIR}"
+
+          # 2) Export each notebook using the same marimo version
           for f in 04_marimo/*.py; do
             [ -e "$f" ] || continue
             uvx --from "marimo==${MARIMO_VERSION}" marimo export html-wasm \
-              --sandbox \
               --mode edit \
               "$f" -o "${OUTPUT_DIR}/$(basename "${f%.py}").html"
           done
