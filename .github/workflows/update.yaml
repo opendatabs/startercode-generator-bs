@@ -59,12 +59,7 @@ jobs:
           rm -rf "${OUTPUT_DIR}"
           mkdir -p "${OUTPUT_DIR}"
 
-          # 1) Copy the EDIT-mode assets exactly once
-          uvx --from "marimo==${MARIMO_VERSION}" marimo assets copy \
-            --mode edit \
-            -o "${OUTPUT_DIR}"
-
-          # 2) Export each notebook using the same marimo version
+          # Export each notebook using the same marimo version
           for f in 04_marimo/*.py; do
             [ -e "$f" ] || continue
             uvx --from "marimo==${MARIMO_VERSION}" marimo export html-wasm \
