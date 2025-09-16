@@ -58,7 +58,7 @@ jobs:
           # Export each marimo app (*.py in 04_marimo) as run-mode HTML
           for f in 04_marimo/*.py; do
             [ -e "$f" ] || continue
-            uvx marimo export html-wasm --sandbox --mode edit --no-show-code "$f" -o "${OUTPUT_DIR}/$(basename "${f%.py}").html"
+            uvx marimo export html-wasm --mode edit "$f" -o "${OUTPUT_DIR}/$(basename "${f%.py}").html"
           done
 
           # Ensure Pages doesn’t run Jekyll on this subdir
