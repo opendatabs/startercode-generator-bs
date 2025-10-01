@@ -255,8 +255,9 @@ def create_overview(data, header):
     baselink_py_gh = f"https://github.com/{GITHUB_ACCOUNT}/{REPO_NAME}/blob/{REPO_BRANCH}/{REPO_PYTHON_OUTPUT}"
     baselink_py_colab = f"https://githubtocolab.com/{GITHUB_ACCOUNT}/{REPO_NAME}/blob/{REPO_BRANCH}/{REPO_PYTHON_OUTPUT}"
     baselink_r_colab = f"https://githubtocolab.com/{GITHUB_ACCOUNT}/{REPO_NAME}/blob/{REPO_BRANCH}/{REPO_R_NOTEBOOK_OUTPUT}"
+    baselink_py_marimo = f"https://{GITHUB_ACCOUNT}.github.io/{REPO_NAME}/marimo"
 
-    renku_base_url = f"https://renkulab.io/projects/{GITHUB_ACCOUNT}/{REPO_NAME}/sessions/new?autostart=1"
+    renku_base_url = f"https://renkulab.io/p/dcc-bs/{REPO_NAME}"
     binder_base_url = (
         f"https://mybinder.org/v2/gh/{GITHUB_ACCOUNT}/{REPO_NAME}/{REPO_BRANCH}"
     )
@@ -277,9 +278,9 @@ def create_overview(data, header):
     )
     md_doc.append("## Overview of datasets\n")
     md_doc.append(
-        f"| ID | Title (abbreviated to {TITLE_MAX_CHARS} chars) | Python Binder | Python Colab | R Colab | Python GitHub | R GitHub |\n"
+        f"| ID | Title (abbreviated to {TITLE_MAX_CHARS} chars) | Python marimo | Python Binder | Python Colab | R Colab | Python GitHub | R GitHub |\n"
     )
-    md_doc.append("| :-- | :-- | :-- | :-- | :-- | :-- | :-- |\n")
+    md_doc.append("| :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |\n")
 
     for idx in tqdm(data.index):
         identifier = data.loc[idx, "dataset_identifier"]
@@ -295,9 +296,10 @@ def create_overview(data, header):
         py_colab_link = f"[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)]({baselink_py_colab}{identifier}.ipynb)"
         r_colab_link = f"[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)]({baselink_r_colab}{identifier}.ipynb)"
         py_binder_link = f"[![Jupyter Binder](https://mybinder.org/badge_logo.svg)]({binder_py_link}{identifier}.ipynb)"
+        py_marimo_link = f"[![Open with  marimo](https://marimo.io/shield.svg)]({baselink_py_marimo}{identifier}.py)"
 
         md_doc.append(
-            f"| {identifier.split('@')[0]} | [{title_clean}]({ds_link}) |{py_binder_link} | {py_colab_link} | {r_colab_link} | {py_gh_link} | {r_gh_link} |\n"
+            f"| {identifier.split('@')[0]} | [{title_clean}]({ds_link}) | {py_marimo_link} | {py_binder_link} | {py_colab_link} | {r_colab_link} | {py_gh_link} | {r_gh_link} |\n"
         )
 
     md_doc = "".join(md_doc)
