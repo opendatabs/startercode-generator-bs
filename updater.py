@@ -58,7 +58,7 @@ KEYS_DATASET = [
     "temporal_coverage_end_date",
     "themes",
     "keywords",
-    "publisher",
+    "creator",
     "reference",
 ]
 
