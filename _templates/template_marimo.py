@@ -53,7 +53,21 @@ def _(mo):
         r"""
     /// details | Metadata
 
-    {{ DATASET_METADATA }}
+{{ DATASET_METADATA }}
+
+    ///
+    """
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(
+        r"""
+    /// details | Data dictionary
+
+{{ DATASET_FIELDS }}
 
     ///
     """

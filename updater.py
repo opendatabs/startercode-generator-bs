@@ -21,6 +21,7 @@ PROVIDER = "Statistisches Amt des Kantons Basel-Stadt - DCC Data Competence Cent
 SHOP_METADATA_LINK = (
     "https://data.bs.ch/api/explore/v2.1/catalog/datasets/100057/exports/json"
 )
+DATASET_API = "https://data.bs.ch/api/explore/v2.1/catalog/datasets/{identifier}"
 CONTACT = "Open Data Basel-Stadt | opendata@bs.ch"
 
 GITHUB_ACCOUNT = "opendatabs"
@@ -94,6 +95,57 @@ def prepare_data_for_codebooks(data):
     return data
 
 
+def json_escape(text):
+    """Escape text for safe embedding inside a JSON string literal (handles backslashes, quotes, control chars)"""
+    return json.dumps(text)[1:-1]
+
+
+def get_dataset_fields(identifier):
+    """Request field schema (name, type, description) for a single dataset"""
+    url = DATASET_API.format(identifier=identifier)
+    try:
+        res = requests.get(url, timeout=10)
+        res.raise_for_status()
+        fields = res.json().get("fields", [])
+    except (requests.RequestException, ValueError):
+        return []
+
+    return [
+        {
+            "name": f.get("name", ""),
+            "type": f.get("type", ""),
+            "description": "; ".join(
+                " ".join(line.split())
+                for line in re.split(r"\r\n|\r|\n", f.get("description") or f.get("description_de") or "")
+                if line.strip()
+            ),
+        }
+        for f in fields
+    ]
+
+
+def format_fields_markdown(fields):
+    """Render a field schema as a markdown table"""
+    if not fields:
+        return "_No field information available._\n"
+
+    rows = ["| Field | Type | Description |\n", "| :-- | :-- | :-- |\n"]
+    for f in fields:
+        description = f["description"] or "—"
+        rows.append(f"| `{f['name']}` | {f['type']} | {description} |\n")
+    return "".join(rows)
+
+
+def fetch_dataset_fields(data):
+    """Fetch and format the field schema for every dataset"""
+    data["fields_markdown"] = None
+    for idx in tqdm(data.index):
+        identifier = data.loc[idx, "dataset_identifier"]
+        fields = get_dataset_fields(identifier)
+        data.loc[idx, "fields_markdown"] = format_fields_markdown(fields)
+    return data
+
+
 def create_python_notebooks(data):
     """Create Jupyter Notebooks with Python starter code"""
     for idx in tqdm(data.index):
@@ -113,6 +165,9 @@ def create_python_notebooks(data):
         py_nb = py_nb.replace("{{ DATASET_IDENTIFIER }}", identifier)
         py_nb = py_nb.replace(
             "{{ DATASET_METADATA }}", re.sub('"', "'", data.loc[idx, "metadata"])
+        )
+        py_nb = py_nb.replace(
+            "{{ DATASET_FIELDS }}", json_escape(data.loc[idx, "fields_markdown"])
         )
 
         ds_link = (
@@ -149,6 +204,7 @@ def create_rmarkdown(data):
         rmd = rmd.replace("{{ DATASET_IDENTIFIER }}", identifier)
         rmd = rmd.replace("{{ DATASET_DESCRIPTION }}", data.loc[idx, "description"])
         rmd = rmd.replace("{{ DATASET_METADATA }}", data.loc[idx, "metadata"])
+        rmd = rmd.replace("{{ DATASET_FIELDS }}", data.loc[idx, "fields_markdown"])
 
         ds_link = (
             f"[Direct data shop link for dataset]({BASELINK_DATASHOP}{identifier})"
@@ -189,6 +245,9 @@ def create_rnotebooks(data):
         r_nb = r_nb.replace("{{ DATASET_IDENTIFIER }}", identifier)
         r_nb = r_nb.replace(
             "{{ DATASET_METADATA }}", re.sub('"', "'", data.loc[idx, "metadata"])
+        )
+        r_nb = r_nb.replace(
+            "{{ DATASET_FIELDS }}", json_escape(data.loc[idx, "fields_markdown"])
         )
         r_nb = r_nb.replace("{{ TODAY_DATE }}", TODAY_DATE)
         ds_link = (
@@ -234,6 +293,7 @@ def create_marimo_apps(data):
         filled = filled.replace("{{ DATASHOP_LINK }}", ds_link)
 
         filled = filled.replace("{{ DATASET_METADATA }}", data.loc[idx, "metadata"])
+        filled = filled.replace("{{ DATASET_FIELDS }}", data.loc[idx, "fields_markdown"])
 
         out_path = f"{TEMP_PREFIX}{REPO_MARIMO_OUTPUT}{identifier}.py"
         with open(out_path, "w", encoding="utf-8") as f_out:
@@ -313,6 +373,7 @@ def create_overview(data, header):
 df = get_current_json()
 df = sort_data(df)
 df = prepare_data_for_codebooks(df)
+df = fetch_dataset_fields(df)
 
 create_python_notebooks(df)
 create_rmarkdown(df)
