@@ -1,6 +1,8 @@
 # IMPORTS -------------------------------------------------------------------- #
 
+import glob
 import json
+import os
 import re
 import warnings
 from datetime import datetime
@@ -46,6 +48,11 @@ TODAY_DATETIME = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
 # max length of dataset title in markdown table
 TITLE_MAX_CHARS = 200
 
+# don't prune an output folder if the live catalogue has fewer than this fraction
+# of the files currently on disk there — a drop that large is more likely a bad/
+# incomplete API response than real dataset removals
+PRUNE_MIN_RATIO = 0.5
+
 # select metadata features that are going to be displayed in starter code files
 KEYS_DATASET = [
     "dataset_identifier",
@@ -81,6 +88,45 @@ def sort_data(data):
     data.sort_values("id_short", inplace=True)
     data.reset_index(drop=True, inplace=True)
     return data
+
+
+def prune_stale_files(data):
+    """Remove generated files for datasets no longer in the live catalogue.
+
+    Skips pruning a folder if the live dataset count has dropped too far below
+    the number of files already on disk there, since a drop that large is more
+    likely a bad/incomplete API response than genuine dataset removals.
+    """
+    valid_identifiers = set(data["dataset_identifier"])
+
+    output_dirs = [
+        (f"{TEMP_PREFIX}{REPO_R_MARKDOWN_OUTPUT}", ".Rmd"),
+        (f"{TEMP_PREFIX}{REPO_R_NOTEBOOK_OUTPUT}", ".ipynb"),
+        (f"{TEMP_PREFIX}{REPO_PYTHON_OUTPUT}", ".ipynb"),
+        (f"{TEMP_PREFIX}{REPO_MARIMO_OUTPUT}", ".py"),
+    ]
+
+    for out_dir, ext in output_dirs:
+        existing = glob.glob(f"{out_dir}*{ext}")
+        if not existing:
+            continue
+
+        if len(valid_identifiers) < len(existing) * PRUNE_MIN_RATIO:
+            print(
+                f"WARNING: skipping prune for {out_dir} — live catalogue has "
+                f"{len(valid_identifiers)} datasets but {len(existing)} files exist there. "
+                "This drop looks too large to be real removals; likely a bad API response."
+            )
+            continue
+
+        removed = 0
+        for path in existing:
+            identifier = os.path.splitext(os.path.basename(path))[0]
+            if identifier not in valid_identifiers:
+                os.remove(path)
+                removed += 1
+        if removed:
+            print(f"Pruned {removed} stale file(s) from {out_dir}")
 
 
 def prepare_data_for_codebooks(data):
@@ -372,6 +418,7 @@ def create_overview(data, header):
 
 df = get_current_json()
 df = sort_data(df)
+prune_stale_files(df)
 df = prepare_data_for_codebooks(df)
 df = fetch_dataset_fields(df)
 
