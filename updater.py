@@ -42,6 +42,13 @@ TEMPLATE_RMARKDOWN = "template_rmarkdown.Rmd"
 TEMPLATE_RNOTEBOOK = "template_rnotebook.ipynb"
 TEMPLATE_MARIMO = "template_marimo.py"
 
+# canonical code shared across templates (see _templates/shared/)
+SHARED_FOLDER = "_templates/shared/"
+SHARED_GET_DATASET_PY = "get_dataset.py"
+SHARED_GET_DATASET_R = "get_dataset.R"
+SHARED_ANALYZE_DATA_PY = "analyze_data.py"
+SHARED_ANALYZE_DATA_R = "analyze_data.R"
+
 TODAY_DATE = datetime.today().strftime("%Y-%m-%d")
 TODAY_DATETIME = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -146,6 +153,67 @@ def json_escape(text):
     return json.dumps(text)[1:-1]
 
 
+def load_shared_source(filename):
+    """Read a canonical code snippet shared across multiple templates"""
+    with open(f"{SHARED_FOLDER}{filename}", encoding="utf-8") as file:
+        return file.read().rstrip("\n")
+
+
+def indent_block(text, spaces):
+    """Indent every line of a multi-line code block by a fixed amount.
+
+    Used when splicing a flush-left shared snippet into an indented context
+    (e.g. inside a marimo cell function) — indenting only the first line and
+    leaving continuation lines flush-left breaks Python syntax and, for
+    markdown, gets misparsed as an indented code block (see the DATASET_FIELDS
+    rendering bug this same issue caused).
+    """
+    prefix = " " * spaces
+    return "\n".join(prefix + line if line else line for line in text.split("\n"))
+
+
+def splice_indented_placeholder(text, placeholder, content, spaces=4):
+    """Replace a `{{ PLACEHOLDER }}` placeholder's WHOLE line (any leading
+    whitespace) with `content`, indented uniformly to `spaces`.
+
+    Replacing only the token (not the whole line) leaves the template's own
+    leading whitespace attached to the spliced block's first line while every
+    other line stays flush-left — mixed indentation that breaks Python syntax
+    (see the GET_DATASET_PY_MARIMO bug this caused). The placeholder must sit
+    alone on its own line in the template.
+    """
+    pattern = r"^[ \t]*\{\{ " + re.escape(placeholder) + r" \}\}[ \t]*$"
+    return re.sub(pattern, lambda _: indent_block(content, spaces), text, flags=re.MULTILINE)
+
+
+def load_shared_sections(filename):
+    """Parse a shared snippet file into named sections, delimited by
+    '# === SECTION: name ===' marker comments, for selective per-placeholder splicing.
+    """
+    text = load_shared_source(filename)
+    parts = re.split(r"^#\s*=== SECTION: (\w+) ===\s*$\n", text, flags=re.MULTILINE)
+    return {parts[i]: parts[i + 1].strip("\n") for i in range(1, len(parts), 2)}
+
+
+def splice_sections(text, sections, prefix, escape=False):
+    """Replace `{{ PREFIX_SECTION_NAME }}` placeholders (flush-left, e.g. inside
+    a Jupyter cell or plain-text template) with their named section bodies.
+    """
+    for name, body in sections.items():
+        placeholder = "{{ " + f"{prefix}{name.upper()}" + " }}"
+        text = text.replace(placeholder, json_escape(body) if escape else body)
+    return text
+
+
+def splice_indented_sections(text, sections, prefix, spaces=4):
+    """Like splice_sections, but for placeholders that sit on their own indented
+    line inside a code block (e.g. a marimo cell) — see splice_indented_placeholder.
+    """
+    for name, body in sections.items():
+        text = splice_indented_placeholder(text, f"{prefix}{name.upper()}", body, spaces)
+    return text
+
+
 def get_dataset_fields(identifier):
     """Request field schema (name, type, description) for a single dataset"""
     url = DATASET_API.format(identifier=identifier)
@@ -215,14 +283,15 @@ def create_python_notebooks(data):
         py_nb = py_nb.replace(
             "{{ DATASET_FIELDS }}", json_escape(data.loc[idx, "fields_markdown"])
         )
+        py_nb = py_nb.replace("{{ GET_DATASET_PY }}", json_escape(GET_DATASET_PY_SOURCE))
+        py_nb = splice_sections(py_nb, EDA_PY_SECTIONS, "EDA_", escape=True)
 
         ds_link = (
             f"[Direct data shop link for dataset]({BASELINK_DATASHOP}{identifier})"
         )
         py_nb = py_nb.replace("{{ DATASHOP_LINK }}", ds_link)
 
-        download_link = f"{BASELINK_DATASHOP}{identifier}/download"
-        code_block = f"df = get_dataset('{download_link}')"
+        code_block = f"df = get_dataset('{identifier}')"
         py_nb = py_nb.replace("{{LOAD_DATA}}", code_block)
 
         py_nb = py_nb.replace("{{ CONTACT }}", CONTACT)
@@ -244,6 +313,8 @@ def create_rmarkdown(data):
 
         # populate template with metadata
         identifier = data.loc[idx, "dataset_identifier"]
+        rmd = rmd.replace("{{ GET_DATASET_R }}", GET_DATASET_R_SOURCE)
+        rmd = splice_sections(rmd, EDA_R_SECTIONS, "EDA_")
         rmd = rmd.replace("{{ DATASET_TITLE }}", data.loc[idx, "title"])
         rmd = rmd.replace("{{ PROVIDER }}", PROVIDER)
         rmd = rmd.replace("{{ TODAY_DATE }}", TODAY_DATE)
@@ -280,6 +351,8 @@ def create_rnotebooks(data):
 
         # populate template with metadata
         identifier = data.loc[idx, "dataset_identifier"]
+        r_nb = r_nb.replace("{{ GET_DATASET_R }}", json_escape(GET_DATASET_R_SOURCE))
+        r_nb = splice_sections(r_nb, EDA_R_SECTIONS, "EDA_", escape=True)
         r_nb = r_nb.replace("{{ PROVIDER }}", PROVIDER)
         r_nb = r_nb.replace(
             "{{ DATASET_TITLE }}", re.sub('"', "'", data.loc[idx, "title"])
@@ -340,6 +413,8 @@ def create_marimo_apps(data):
 
         filled = filled.replace("{{ DATASET_METADATA }}", data.loc[idx, "metadata"])
         filled = filled.replace("{{ DATASET_FIELDS }}", data.loc[idx, "fields_markdown"])
+        filled = splice_indented_placeholder(filled, "GET_DATASET_PY_MARIMO", GET_DATASET_PY_SOURCE)
+        filled = splice_indented_sections(filled, EDA_PY_SECTIONS, "EDA_")
 
         out_path = f"{TEMP_PREFIX}{REPO_MARIMO_OUTPUT}{identifier}.py"
         with open(out_path, "w", encoding="utf-8") as f_out:
@@ -415,6 +490,11 @@ def create_overview(data, header):
 
 
 # CREATE CODE FILES ---------------------------------------------------------- #
+
+GET_DATASET_PY_SOURCE = load_shared_source(SHARED_GET_DATASET_PY)
+GET_DATASET_R_SOURCE = load_shared_source(SHARED_GET_DATASET_R)
+EDA_PY_SECTIONS = load_shared_sections(SHARED_ANALYZE_DATA_PY)
+EDA_R_SECTIONS = load_shared_sections(SHARED_ANALYZE_DATA_R)
 
 df = get_current_json()
 df = sort_data(df)

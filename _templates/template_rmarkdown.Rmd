@@ -30,28 +30,7 @@ library(tidyverse)
 The dataset is read into a dataframe
 
 ```{r}
-get_dataset <- function(url) {
-  # Create directory if it does not exist
-  data_path <- file.path(getwd(), '..', 'data')
-  if (!dir.exists(data_path)) {
-    dir.create(data_path, recursive = TRUE)
-  }
-  # Download the CSV file
-  csv_path <- file.path(data_path , '{{ DATASET_IDENTIFIER }}.csv')
-  download.file(url, csv_path, mode = "wb")
-
-  # Read the CSV file
-  data <- tryCatch(
-      read.csv(csv_path, sep = ";", stringsAsFactors = FALSE, encoding = "UTF-8"),
-      warning = function(w) NULL,
-      error = function(e) NULL
-  )
-  # if dataframe only has one column or less the data is not ";" separated
-  if (is.null(data) || ncol(data) <= 1) {
-      stop("The data wasn't imported properly. Very likely the correct separator couldn't be found.\nPlease check the dataset manually and adjust the code.")
-  }
-  return(data)
-}
+{{ GET_DATASET_R }}
 ```
 
 ```{r}
@@ -64,64 +43,40 @@ get_dataset <- function(url) {
 
 ```{r}
 
-glimpse(df)
-str(df)
+{{ EDA_GLIMPSE }}
+{{ EDA_STR }}
 
-head(df)
-tail(df)
+{{ EDA_HEAD }}
+{{ EDA_TAIL }}
 
 ```
 
 ```{r}
-# Remove columns that have no values
-df <- Filter(function(x) !all(is.na(x)), df)
-
-# Remove rows with missing values (if appropriate)
-df <- na.omit(df)
+{{ EDA_CLEAN_NA }}
 ```
 
 ```{r}
-# display a small random sample transposed in order to see all variables
-t(sample_n(df, 5))
+{{ EDA_SAMPLE_TRANSPOSED }}
 ```
 
 ```{r}
-# the size of the data frame in memory
-size <- object.size(df)
-#  the size in bytes
-print(size)
+{{ EDA_OBJECT_SIZE }}
 ```
 
 ```{r}
-# describe numerical features
-summary(df[, sapply(df, is.numeric)])
+{{ EDA_SUMMARY_NUMERIC }}
 ```
 
 ```{r}
-# describe non-numerical features
-summary(df[, sapply(df, Negate(is.numeric))])
+{{ EDA_SUMMARY_NONNUMERIC }}
 ```
 
 ```{r}
-# check missing values
-df %>%
-  mutate(row = row_number()) %>%
-  gather(key = "variable", value = "value", -row) %>%
-  ggplot(aes(x = variable, y = row)) +
-  geom_tile(aes(fill = is.na(value)), color = "black") +
-  scale_fill_manual(values = c("TRUE" = "grey", "FALSE" = "red")) +
-  labs(x = "", y = "", fill = "Missing") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+{{ EDA_MISSING_TILE }}
 ```
 
 ```{r}
-# plot a histogram for each numerical feature
-df %>%
-  select_if(is.numeric) %>%
-  gather() %>%
-  ggplot( aes(value)) +
-  geom_histogram(bins = 10, color = "white", fill = "red") +
-    facet_wrap(~key, scales = 'free_x')
+{{ EDA_HISTOGRAM }}
 ```
 
 # Continue your code here...

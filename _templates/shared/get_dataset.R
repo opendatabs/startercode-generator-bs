@@ -1,0 +1,24 @@
+# Canonical data-loading code, shared by template_rmarkdown.Rmd and
+# template_rnotebook.ipynb via updater.py.
+get_dataset <- function(url) {
+  # Create directory if it does not exist
+  data_path <- file.path(getwd(), '..', 'data')
+  if (!dir.exists(data_path)) {
+    dir.create(data_path, recursive = TRUE)
+  }
+  # Download the CSV file
+  csv_path <- file.path(data_path , '{{ DATASET_IDENTIFIER }}.csv')
+  download.file(url, csv_path, mode = "wb")
+
+  # Read the CSV file
+  data <- tryCatch(
+      read.csv(csv_path, sep = ";", stringsAsFactors = FALSE, encoding = "UTF-8"),
+      warning = function(w) NULL,
+      error = function(e) NULL
+  )
+  # if dataframe only has one column or less the data is not ";" separated
+  if (is.null(data) || ncol(data) <= 1) {
+      stop("The data wasn't imported properly. Very likely the correct separator couldn't be found.\nPlease check the dataset manually and adjust the code.")
+  }
+  return(data)
+}
